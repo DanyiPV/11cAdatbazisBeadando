@@ -84,13 +84,16 @@ where d.id not in (
 
 --f.
 
-SELECT d.nev
-from diak d, jelentkezes j 
-where d.id=j.diakid 
-having count(d.id) > ALL (
-    SELECT count(j.diakid)
-    from jelentkezes j
+select t.nev
+from tevekenyseg t, munka m 
+where m.tevekenysegid = t.id
+group by m.tevekenysegid
+having count(m.tevekenysegid) > ALL (
+    SELECT m.maxletszam
+    from tevekenyseg t left join munka m on m.tevekenysegid = t.id
 )
+
+
 
 --g.
 
@@ -101,6 +104,12 @@ WHERE m.tevekenysegid = t.id AND t.iskolai is false AND m.maxletszam < ANY (SELE
                                                                             WHERE t.iskolai is true AND m.tevekenysegid = t.id)
 
 --h.
+
+select distinct a.nev
+from jelentkezes j, (select d.id as id, d.nev as nev
+                    from diak d
+                    where d.nev like "Nagy%") a
+where j.diakid=a.id and j.teljesítve is true 
 
 
 
@@ -148,4 +157,13 @@ from jelentkezes j left join diak d on j.diakid=d.id
 
 --o.
 
+select distinct d.nev, count(m.id)
+from diak d left join jelentkezes j on d.id=j.diakid left join munka m on j.munkaid = m.id
+where j.ervenyes is true and j.elfogadva is true
+group by j.diakid
+union 
+select distinct d.nev, count(m.id)
+from diak d left join jelentkezes j on d.id=j.diakid
+left join munka m on m.id=j.munkaid
+group by j.diakid
 
